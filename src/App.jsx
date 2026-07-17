@@ -5,6 +5,7 @@ import GalleryPreview from "./components/GalleryPreview";
 import Hero from "./components/Hero";
 import Services from "./components/Services";
 import GalleryPage from "./pages/GalleryPage";
+import Footer from "./components/Footer";
 
 function HomePage() {
   return (
@@ -12,6 +13,7 @@ function HomePage() {
       <Hero />
       <Services />
       <GalleryPreview />
+      <Footer />
     </div>
   );
 }
