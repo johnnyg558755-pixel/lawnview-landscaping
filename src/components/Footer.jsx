@@ -16,8 +16,10 @@ function Footer() {
           <h3>Quick Links</h3>
           <Link to="/">Home</Link>
           <Link to="/gallery">Gallery</Link>
+          <Link to="/about">About</Link>
           <a href="#services">Services</a>
-          <a href="#contact">Contact</a>
+          <Link to="/contact">Contact</Link>
+          <Link to="/estimate" className="footer-estimate-link">Free Estimate</Link>
         </div>
 
         <div className="footer-services">

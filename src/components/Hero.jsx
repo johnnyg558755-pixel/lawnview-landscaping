@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Navbar from "./Navbar";
 
 function Hero() {
@@ -13,7 +14,9 @@ function Hero() {
           edging, mulching, cleanups, and more.
         </p>
 
-        <button>Get a Free Estimate</button>
+        <Link to="/estimate" className="hero-estimate-button">
+          Get a Free Estimate
+        </Link>
       </div>
     </header>
   );

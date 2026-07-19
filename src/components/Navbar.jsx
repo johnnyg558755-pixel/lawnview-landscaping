@@ -44,15 +44,25 @@ function Navbar() {
         </li>
 
         <li>
-          <a href="#about" onClick={closeMenu}>
+          <Link to="/about" onClick={closeMenu}>
             About
-          </a>
+          </Link>
         </li>
 
         <li>
-          <a href="#contact" onClick={closeMenu}>
+          <Link to="/contact" onClick={closeMenu}>
             Contact
-          </a>
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            to="/estimate"
+            className="nav-estimate-button"
+            onClick={closeMenu}
+          >
+            Free Estimate
+          </Link>
         </li>
       </ul>
     </nav>
