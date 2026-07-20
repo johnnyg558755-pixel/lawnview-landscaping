@@ -13,7 +13,7 @@ function Navbar() {
       <h2>Lawnview Landscaping</h2>
 
       <button
-        className="menu-toggle"
+        className={menuOpen ? "menu-toggle open" : "menu-toggle"}
         type="button"
         aria-label="Toggle navigation menu"
         aria-expanded={menuOpen}
