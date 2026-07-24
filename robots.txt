@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://johnnyg558755-pixel.github.io/lawnview-landscaping/sitemap.xml
