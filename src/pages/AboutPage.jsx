@@ -1,11 +1,20 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { Helmet } from "react-helmet-async";
 
 function AboutPage() {
   return (
     <div className="about-page">
       <Navbar />
+      <Helmet>
+        <title>About Lawnview Landscaping</title>
+
+        <meta
+          name="description"
+          content="Learn about Lawnview Landscaping and our commitment to reliable lawn care and customer satisfaction in Mesquite, Texas."
+        />
+      </Helmet>
 
       <main>
         <section className="about-hero">

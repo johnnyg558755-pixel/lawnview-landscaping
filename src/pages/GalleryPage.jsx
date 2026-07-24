@@ -1,8 +1,17 @@
 import Navbar from "../components/Navbar";
+import { Helmet } from "react-helmet-async";
 
 function GalleryPage() {
   return (
     <div className="gallery-page">
+      <Helmet>
+        <title>Gallery | Lawnview Landscaping</title>
+
+        <meta
+          name="description"
+          content="View examples of Lawnview Landscaping's lawn mowing, edging, mulching, and landscaping work in Mesquite, Texas."
+        />
+      </Helmet>
       <Navbar />
 
       <main>

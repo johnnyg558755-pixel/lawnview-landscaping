@@ -1,11 +1,20 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { Helmet } from "react-helmet-async";
 
 function ContactPage() {
   return (
     <div className="contact-page">
       <Navbar />
+      <Helmet>
+        <title>Contact Lawnview Landscaping</title>
+
+        <meta
+          name="description"
+          content="Contact Lawnview Landscaping for lawn mowing, landscaping, and free estimates in Mesquite, Texas."
+        />
+      </Helmet>
 
       <main>
         <section className="contact-hero">

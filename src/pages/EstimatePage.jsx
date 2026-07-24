@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { Helmet } from "react-helmet-async";
 
 function EstimatePage() {const [status, setStatus] = useState("");
 const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +39,14 @@ async function handleSubmit(event) {
   return (
     <div className="estimate-page">
       <Navbar />
+      <Helmet>
+        <title>Free Estimate | Lawnview Landscaping</title>
+
+        <meta
+          name="description"
+          content="Request a free lawn care estimate from Lawnview Landscaping. Serving Mesquite, Texas with professional landscaping services."
+        />
+      </Helmet>
 
       <main>
         <section className="estimate-hero">

@@ -32,9 +32,9 @@ function Navbar() {
         </li>
 
         <li>
-          <a href="#services" onClick={closeMenu}>
+          <Link to="/services" onClick={closeMenu}>
             Services
-          </a>
+          </Link>
         </li>
 
         <li>
