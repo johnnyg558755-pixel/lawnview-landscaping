@@ -14,6 +14,8 @@ import EstimatePage from "./pages/EstimatePage";
 import ServicesPage from "./pages/ServicesPage";
 import ServiceAreaPage from "./pages/ServiceAreaPage";
 import FAQ from "./components/FAQ";
+import AdminLayout from "./admin/AdminLayout";
+import AdminDashboardPage from "./admin/pages/AdminDashboardPage";
 
 function HomePage() {
   return (
@@ -102,6 +104,9 @@ function App() {
       <Route path="/estimate" element={<EstimatePage />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/service-area" element={<ServiceAreaPage />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboardPage />} />
+      </Route>
     </Routes>
   );
 }
