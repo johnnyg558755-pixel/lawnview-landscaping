@@ -12,8 +12,24 @@ async function handleSubmit(event) {
   const form = event.currentTarget;
   const formData = new FormData(form);
 
-  setIsSubmitting(true);
+  const inquiryId = `LV-${Date.now()}`;
+
+  formData.append("inquiryId", inquiryId);
+  formData.append("leadStatus", "New Inquiry");
+  formData.append("leadSource", "Lawnview Website");
+  formData.append("submittedAt", new Date().toISOString());
+
+  const phone = String(formData.get("phone") || "");
+  const phoneDigits = phone.replace(/\D/g, "");
+
   setStatus("");
+
+  if (phoneDigits.length !== 10) {
+    setStatus("phone-error");
+    return;
+  }
+
+  setIsSubmitting(true);
 
   try {
     const response = await fetch("https://formspree.io/f/mnjedlga", {
@@ -69,6 +85,17 @@ async function handleSubmit(event) {
           </div>
 
           <form className="estimate-form" onSubmit={handleSubmit}>
+            <input
+              type="hidden"
+              name="_subject"
+              value="New Lawnview Estimate Request"
+            />
+
+            <input
+              type="hidden"
+              name="requestType"
+              value="Free Estimate"
+            />
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="name">Full Name</label>
@@ -87,9 +114,18 @@ async function handleSubmit(event) {
                   id="phone"
                   name="phone"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   placeholder="(972) 555-1234"
+                  patter="[0-9()+\-\s]{10,}"
+                  title="Please enter a valid phone number with at least 10 digits."
                   required
                 />
+                {status === "phone-error" && (
+                  <p className="field-error" role="alert">
+                    Please enter a valid 10-digit phone number.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -173,10 +209,29 @@ async function handleSubmit(event) {
             </button>
 
             {status === "success" && (
-              <p className="form-message form-success">
-                Thank you! Your estimate request was sent successfully. Lawnview will
-                contact you soon.
-              </p>
+              <div
+                className="estimate-confirmation"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="confirmation-icon" aria-hidden="true">
+                  ✓
+                </div>
+
+                <div>
+                  <h3>Estimate request received!</h3>
+
+                  <p>
+                    Thank you for contacting Lawnview Landscaping. We’ll review your
+                    property information and respond within one business day.
+                  </p>
+
+                  <p className="confirmation-next-step">
+                    Watch for a call, text, or email based on the contact method you
+                    selected.
+                  </p>
+                </div>
+              </div>
             )}
 
             {status === "error" && (

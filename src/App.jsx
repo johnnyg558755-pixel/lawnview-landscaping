@@ -12,6 +12,8 @@ import Footer from "./components/Footer";
 import ContactPage from "./pages/ContactPage";
 import EstimatePage from "./pages/EstimatePage";
 import ServicesPage from "./pages/ServicesPage";
+import ServiceAreaPage from "./pages/ServiceAreaPage";
+import FAQ from "./components/FAQ";
 
 function HomePage() {
   return (
@@ -30,6 +32,7 @@ function HomePage() {
       <Hero />
       <Services />
       <GalleryPreview />
+      <FAQ />
       <Footer />
     </div>
     </>
@@ -98,6 +101,7 @@ function App() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/estimate" element={<EstimatePage />} />
       <Route path="/services" element={<ServicesPage />} />
+      <Route path="/service-area" element={<ServiceAreaPage />} />
     </Routes>
   );
 }

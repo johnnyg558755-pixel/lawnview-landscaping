@@ -1,65 +1,85 @@
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
 function GalleryPage() {
+  const projects = [];
+
   return (
     <div className="gallery-page">
       <Helmet>
-        <title>Gallery | Lawnview Landscaping</title>
+        <title>Project Gallery | Lawnview Landscaping</title>
 
         <meta
           name="description"
-          content="View examples of Lawnview Landscaping's lawn mowing, edging, mulching, and landscaping work in Mesquite, Texas."
+          content="View before-and-after lawn care projects completed by Lawnview Landscaping in Mesquite, Texas."
         />
       </Helmet>
+
       <Navbar />
 
       <main>
         <section className="gallery-page-hero">
-          <p className="section-label">Lawnview Portfolio</p>
+          <p className="section-label">Real Local Projects</p>
           <h1>Lawnview Project Gallery</h1>
+
           <p>
-            View examples of lawn maintenance, landscape improvements,
-            property cleanups, and outdoor projects.
+            Explore before-and-after results from lawn maintenance, property
+            cleanups, edging, trimming, and landscape improvements completed
+            around Mesquite.
           </p>
         </section>
 
         <section className="gallery-page-content">
-          <div className="gallery-grid">
-            <article className="gallery-card">
-              <img
-                src="https://images.unsplash.com/photo-1598902108854-10e335adac99?auto=format&fit=crop&w=900&q=80"
-                alt="Freshly maintained lawn"
-              />
-              <div className="gallery-overlay">
-                <h3>Weekly Lawn Maintenance</h3>
-              </div>
-            </article>
+          {projects.length > 0 ? (
+            <div className="project-gallery-grid">
+              {projects.map((project) => (
+                <article className="project-card" key={project.id}>
+                  <div className="before-after-grid">
+                    <figure>
+                      <img src={project.before} alt={project.beforeAlt} />
+                      <figcaption>Before</figcaption>
+                    </figure>
 
-            <article className="gallery-card">
-              <img
-                src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=80"
-                alt="Green landscape"
-              />
-              <div className="gallery-overlay">
-                <h3>Landscape Enhancement</h3>
-              </div>
-            </article>
+                    <figure>
+                      <img src={project.after} alt={project.afterAlt} />
+                      <figcaption>After</figcaption>
+                    </figure>
+                  </div>
 
-            <article className="gallery-card">
-              <img
-                src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=80"
-                alt="Clean outdoor property"
-              />
-              <div className="gallery-overlay">
-                <h3>Property Cleanup</h3>
-              </div>
-            </article>
-          </div>
+                  <div className="project-info">
+                    <p className="project-service">{project.service}</p>
+                    <h2>{project.title}</h2>
+                    <p>{project.location}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="gallery-empty">
+              <span className="gallery-empty-icon" aria-hidden="true">
+                🌱
+              </span>
+
+              <p className="section-label">Portfolio Growing Soon</p>
+              <h2>Real Lawnview projects are on the way.</h2>
+
+              <p>
+                We’re currently documenting our local work so you can see
+                authentic before-and-after results from properties around
+                Mesquite.
+              </p>
+
+              <Link className="gallery-estimate-button" to="/estimate">
+                Request a Free Estimate
+              </Link>
+            </div>
+          )}
         </section>
       </main>
 
-      
+      <Footer />
     </div>
   );
 }

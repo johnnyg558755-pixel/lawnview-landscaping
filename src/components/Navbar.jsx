@@ -38,6 +38,12 @@ function Navbar() {
         </li>
 
         <li>
+          <Link to="/service-area" onClick={closeMenu}>
+            Service Area
+          </Link>
+        </li>
+
+        <li>
           <Link to="/gallery" onClick={closeMenu}>
             Gallery
           </Link>

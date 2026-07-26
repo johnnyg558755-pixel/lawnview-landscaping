@@ -1,48 +1,39 @@
+import { Link } from "react-router-dom";
+
 function GalleryPreview() {
   return (
     <section className="gallery" id="gallery">
+      <p className="section-label">Real Local Results</p>
       <h2>Our Work</h2>
 
       <p className="section-intro">
-        Every lawn deserves professional care. Here are examples of the
-        beautiful outdoor spaces we're proud to create.
+        Lawnview is documenting real projects around Mesquite so homeowners
+        can see authentic before-and-after results.
       </p>
 
-      <div className="gallery-grid">
-
-        <div className="gallery-card">
-          <img
-            src="https://images.unsplash.com/photo-1598902108854-10e335adac99?auto=format&fit=crop&w=900&q=80"
-            alt="Freshly mowed lawn"
-          />
-
-          <div className="gallery-overlay">
-            <h3>Weekly Lawn Maintenance</h3>
-          </div>
+      <div className="gallery-preview-empty">
+        <div className="gallery-preview-icon" aria-hidden="true">
+          🌱
         </div>
 
-        <div className="gallery-card">
-          <img
-            src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=80"
-            alt="Landscape design"
-          />
+        <div className="gallery-preview-content">
+          <h3>Our project gallery is growing.</h3>
 
-          <div className="gallery-overlay">
-            <h3>Landscape Enhancement</h3>
-          </div>
+          <p>
+            Real lawn maintenance, edging, cleanup, and landscaping photos will
+            be added as projects are completed.
+          </p>
         </div>
 
-        <div className="gallery-card">
-          <img
-            src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=80"
-            alt="Clean property"
-          />
+        <div className="gallery-preview-actions">
+          <Link className="gallery-preview-primary" to="/estimate">
+            Start Your Project
+          </Link>
 
-          <div className="gallery-overlay">
-            <h3>Property Cleanup</h3>
-          </div>
+          <Link className="gallery-preview-secondary" to="/gallery">
+            View Gallery
+          </Link>
         </div>
-
       </div>
     </section>
   );
