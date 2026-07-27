@@ -1,6 +1,16 @@
 import { NavLink, Outlet } from "react-router-dom";
 import "./AdminLayout.css";
 
+const adminLinks = [
+  { to: "/admin", label: "Dashboard", end: true },
+  { to: "/admin/inquiries", label: "Inquiries" },
+  { to: "/admin/customers", label: "Customers" },
+  { to: "/admin/estimates", label: "Estimates" },
+  { to: "/admin/jobs", label: "Jobs" },
+  { to: "/admin/schedule", label: "Schedule" },
+  { to: "/admin/invoices", label: "Invoices" },
+];
+
 function AdminLayout() {
   return (
     <div className="admin-layout">
@@ -15,33 +25,11 @@ function AdminLayout() {
         </div>
 
         <nav className="admin-navigation" aria-label="Admin navigation">
-          <NavLink to="/admin" end>
-            Dashboard
-          </NavLink>
-
-          <NavLink to="/admin/inquiries">
-            Inquiries
-          </NavLink>
-
-          <NavLink to="/admin/customers">
-            Customers
-          </NavLink>
-
-          <NavLink to="/admin/estimates">
-            Estimates
-          </NavLink>
-
-          <NavLink to="/admin/jobs">
-            Jobs
-          </NavLink>
-
-          <NavLink to="/admin/schedule">
-            Schedule
-          </NavLink>
-
-          <NavLink to="/admin/invoices">
-            Invoices
-          </NavLink>
+          {adminLinks.map((link) => (
+            <NavLink key={link.to} to={link.to} end={link.end}>
+              {link.label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="admin-sidebar-footer">

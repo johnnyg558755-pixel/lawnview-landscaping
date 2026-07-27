@@ -16,6 +16,7 @@ import ServiceAreaPage from "./pages/ServiceAreaPage";
 import FAQ from "./components/FAQ";
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboardPage from "./admin/pages/AdminDashboardPage";
+import AdminInquiriesPage from "./admin/pages/AdminInquiriesPage";
 
 function HomePage() {
   return (
@@ -106,6 +107,10 @@ function App() {
       <Route path="/service-area" element={<ServiceAreaPage />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboardPage />} />
+      </Route>
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="inquiries" element={<AdminInquiriesPage />} />
       </Route>
     </Routes>
   );
