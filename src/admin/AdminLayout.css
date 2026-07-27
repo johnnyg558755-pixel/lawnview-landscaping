@@ -816,3 +816,76 @@
     grid-template-columns: 1fr;
   }
 }
+
+.admin-estimate-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-status-draft {
+  background: #e8eee9;
+  color: #58645c;
+}
+
+.admin-status-sent {
+  background: #e5f3ff;
+  color: #17639a;
+}
+
+.admin-status-approved {
+  background: var(--admin-green-light);
+  color: var(--admin-green-dark);
+}
+
+.admin-status-declined {
+  background: #fde9e7;
+  color: #a43c32;
+}
+
+.admin-estimates-table td:first-child strong,
+.admin-estimates-table td:first-child span {
+  display: block;
+}
+
+.admin-estimates-table td:first-child span {
+  margin-top: 5px;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 700px) {
+  .admin-estimate-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-estimates-table {
+    min-width: 850px;
+  }
+}
+
+.admin-estimate-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding: 18px;
+  border-radius: 10px;
+  background: var(--admin-green-light);
+}
+
+.admin-estimate-total span {
+  color: var(--admin-green-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-estimate-total strong {
+  color: var(--admin-green-dark);
+  font-size: 1.5rem;
+}
+
+.admin-primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
