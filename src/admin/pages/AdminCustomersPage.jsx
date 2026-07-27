@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import AddCustomerModal from "../components/AddCustomerModal";
+import CustomerDetailsModal from "../components/CustomerDetailsModal";
 
 const sampleCustomers = [
   {
@@ -37,14 +39,48 @@ const sampleCustomers = [
   },
 ];
 
+const CUSTOMERS_STORAGE_KEY = "lawnview-admin-customers";
+
+function loadSavedCustomers() {
+  try {
+    const savedCustomers = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
+
+    return savedCustomers ? JSON.parse(savedCustomers) : sampleCustomers;
+  } catch {
+    return sampleCustomers;
+  }
+}
+
 function AdminCustomersPage() {
+  const [customers, setCustomers] = useState(loadSavedCustomers);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+
+  useEffect(() => {
+    localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
+  }, [customers]);
+
+  function handleAddCustomer(customer) {
+    setCustomers((currentCustomers) => [customer, ...currentCustomers]);
+    setIsAddModalOpen(false);
+  }
+
+  function handleSaveCustomer(updatedCustomer) {
+    setCustomers((currentCustomers) =>
+      currentCustomers.map((customer) =>
+        customer.id === updatedCustomer.id ? updatedCustomer : customer,
+      ),
+    );
+
+    setSelectedCustomer(null);
+  }
 
   const filteredCustomers = useMemo(() => {
     const search = searchTerm.toLowerCase();
 
-    return sampleCustomers.filter((customer) => {
+    return customers.filter((customer) => {
       const matchesSearch =
         customer.name.toLowerCase().includes(search) ||
         customer.phone.includes(searchTerm) ||
@@ -55,7 +91,7 @@ function AdminCustomersPage() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [customers, searchTerm, statusFilter]);
 
   return (
     <>
@@ -70,7 +106,11 @@ function AdminCustomersPage() {
           <p>Manage customer information and Lawnview service history.</p>
         </div>
 
-        <button className="admin-primary-button" type="button">
+        <button 
+          className="admin-primary-button" 
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+          >
           Add Customer
         </button>
       </header>
@@ -138,7 +178,11 @@ function AdminCustomersPage() {
                   </td>
 
                   <td>
-                    <button className="admin-text-button" type="button">
+                    <button 
+                      className="admin-text-button" 
+                      type="button"
+                      onClick={() => setSelectedCustomer({ ...customer})}
+                    >
                       View
                     </button>
                   </td>
@@ -155,6 +199,19 @@ function AdminCustomersPage() {
           </div>
         )}
       </section>
+      {isAddModalOpen && (
+        <AddCustomerModal
+          onClose={() => setIsAddModalOpen(false)}
+          onAdd={handleAddCustomer}
+        />
+      )}
+      {selectedCustomer && (
+        <CustomerDetailsModal
+          customer={selectedCustomer}
+          onClose={() => setSelectedCustomer(null)}
+          onSave={handleSaveCustomer}
+        />
+      )}
     </>
   );
 }
