@@ -758,3 +758,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+.admin-customers-table td:first-child small {
+  display: block;
+  margin-top: 4px;
+  color: var(--admin-muted);
+  font-size: 0.75rem;
+}
+
+.admin-status-active {
+  background: var(--admin-green-light);
+  color: var(--admin-green-dark);
+}
+
+.admin-status-inactive {
+  background: #e8eee9;
+  color: #58645c;
+}
+
+@media (max-width: 700px) {
+  .admin-customers-table {
+    min-width: 900px;
+  }
+}

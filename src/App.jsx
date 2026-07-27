@@ -17,6 +17,7 @@ import FAQ from "./components/FAQ";
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboardPage from "./admin/pages/AdminDashboardPage";
 import AdminInquiriesPage from "./admin/pages/AdminInquiriesPage";
+import AdminCustomersPage from "./admin/pages/AdminCustomersPage";
 
 function HomePage() {
   return (
@@ -111,6 +112,7 @@ function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboardPage />} />
         <Route path="inquiries" element={<AdminInquiriesPage />} />
+        <Route path="customers" element={<AdminCustomersPage />} />
       </Route>
     </Routes>
   );
