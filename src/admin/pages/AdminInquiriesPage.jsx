@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AddInquiryModal from "../components/AddInquiryModal";
 
@@ -54,12 +54,29 @@ const sampleInquiries = [
   },
 ];
 
+const INQUIRIES_STORAGE_KEY = "lawnview-admin-inquiries";
+
+function loadSavedInquiries() {
+  try {
+    const savedInquiries = localStorage.getItem(INQUIRIES_STORAGE_KEY);
+
+    return savedInquiries ? JSON.parse(savedInquiries) : sampleInquiries;
+  } catch {
+    return sampleInquiries;
+  }
+}
+
 function AdminInquiriesPage() {
-  const [inquiries, setInquiries] = useState(sampleInquiries);
+  const [inquiries, setInquiries] = useState(loadSavedInquiries);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(INQUIRIES_STORAGE_KEY, JSON.stringify(inquiries));
+
+  }, [inquiries]);
 
   const filteredInquiries = useMemo(() => {
     return inquiries.filter((inquiry) => {
