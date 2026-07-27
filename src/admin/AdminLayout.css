@@ -724,3 +724,37 @@
     width: 100%;
   }
 }
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+}
+
+.admin-form-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cbd7cf;
+  border-radius: 9px;
+  background: white;
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.admin-form-field input:focus {
+  border-color: var(--admin-green);
+  box-shadow: 0 0 0 3px rgba(31, 111, 67, 0.12);
+}
+
+.admin-add-inquiry-modal {
+  width: min(100%, 760px);
+}
+
+@media (max-width: 620px) {
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

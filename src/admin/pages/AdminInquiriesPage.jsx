@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import AddInquiryModal from "../components/AddInquiryModal";
+
 
 const sampleInquiries = [
   {
@@ -57,6 +59,7 @@ function AdminInquiriesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const filteredInquiries = useMemo(() => {
     return inquiries.filter((inquiry) => {
@@ -73,6 +76,11 @@ function AdminInquiriesPage() {
       return matchesSearch && matchesStatus;
     });
   }, [inquiries, searchTerm, statusFilter]);
+
+  function handleAddInquiry(inquiry) {
+    setInquiries((currentInquiries) => [inquiry, ...currentInquiries]);
+    setIsAddModalOpen(false);
+  }
 
   function handleSaveInquiry(event) {
     event.preventDefault();
@@ -99,7 +107,11 @@ function AdminInquiriesPage() {
           <p>Track new leads and move them toward a scheduled job.</p>
         </div>
 
-        <button className="admin-primary-button" type="button">
+        <button
+          className="admin-primary-button"
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+        >
           Add Inquiry
         </button>
       </header>
@@ -302,6 +314,12 @@ function AdminInquiriesPage() {
             </form>
           </section>
         </div>
+      )}
+      {isAddModalOpen && (
+        <AddInquiryModal
+          onClose={() => setIsAddModalOpen(false)}
+          onAdd={handleAddInquiry}
+        />
       )}
     </>
   );
