@@ -19,6 +19,7 @@ import AdminDashboardPage from "./admin/pages/AdminDashboardPage";
 import AdminInquiriesPage from "./admin/pages/AdminInquiriesPage";
 import AdminCustomersPage from "./admin/pages/AdminCustomersPage";
 import AdminEstimatesPage from "./admin/pages/AdminEstimatesPage";
+import AdminJobsPage from "./admin/pages/AdminJobsPage";
 
 function HomePage() {
   return (
@@ -115,6 +116,7 @@ function App() {
         <Route path="inquiries" element={<AdminInquiriesPage />} />
         <Route path="customers" element={<AdminCustomersPage />} />
         <Route path="estimates" element={<AdminEstimatesPage />} />
+        <Route path="jobs" element={<AdminJobsPage />} />
       </Route>
     </Routes>
   );

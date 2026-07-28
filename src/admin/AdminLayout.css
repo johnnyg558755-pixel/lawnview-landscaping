@@ -889,3 +889,43 @@
   opacity: 0.5;
   transform: none;
 }
+
+.admin-status-scheduled {
+  background: #e5f3ff;
+  color: #17639a;
+}
+
+.admin-status-in-progress {
+  background: #fff3d9;
+  color: #8a5a00;
+}
+
+.admin-status-completed {
+  background: var(--admin-green-light);
+  color: var(--admin-green-dark);
+}
+
+.admin-status-cancelled {
+  background: #fde9e7;
+  color: #a43c32;
+}
+
+.admin-jobs-table td:first-child strong,
+.admin-jobs-table td:first-child span,
+.admin-jobs-table td:nth-child(4) strong,
+.admin-jobs-table td:nth-child(4) span {
+  display: block;
+}
+
+.admin-jobs-table td:first-child span,
+.admin-jobs-table td:nth-child(4) span {
+  margin-top: 5px;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 700px) {
+  .admin-jobs-table {
+    min-width: 1050px;
+  }
+}
