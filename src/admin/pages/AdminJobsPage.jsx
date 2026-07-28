@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import CreateJobModal from "../components/CreateJobModal";
 
 const sampleJobs = [
   {
@@ -34,6 +35,20 @@ const sampleJobs = [
   },
 ];
 
+const JOBS_STORAGE_KEY = "lawnview-admin-jobs";
+const ESTIMATES_STORAGE_KEY = "lawnview-admin-estimates";
+const CUSTOMERS_STORAGE_KEY = "lawnview-admin-customers";
+
+function loadStorage(key, fallback = []) {
+  try {
+    const savedData = localStorage.getItem(key);
+
+    return savedData ? JSON.parse(savedData) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -42,13 +57,37 @@ function formatCurrency(amount) {
 }
 
 function AdminJobsPage() {
+  const [jobs, setJobs] = useState(() =>
+    loadStorage(JOBS_STORAGE_KEY, sampleJobs),
+  );
+
+  const [approvedEstimates] = useState(() =>
+    loadStorage(ESTIMATES_STORAGE_KEY).filter(
+      (estimate) => estimate.status === "Approved",
+    ),
+  );
+
+  const [customers] = useState(() =>
+    loadStorage(CUSTOMERS_STORAGE_KEY),
+  );
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const filteredJobs = useMemo(() => {
-    const search = searchTerm.toLowerCase();
+useEffect(() => {
+  localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
+}, [jobs]);
 
-    return sampleJobs.filter((job) => {
+function handleCreateJob(job) {
+  setJobs((currentJobs) => [job, ...currentJobs]);
+  setIsCreateModalOpen(false);
+}
+
+  const filteredJobs = useMemo(() => {
+  const search = searchTerm.toLowerCase();
+
+    return jobs.filter((job) => {
       const matchesSearch =
         job.customer.toLowerCase().includes(search) ||
         job.service.toLowerCase().includes(search) ||
@@ -59,7 +98,7 @@ function AdminJobsPage() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [jobs, searchTerm, statusFilter]);
 
   return (
     <>
@@ -74,7 +113,11 @@ function AdminJobsPage() {
           <p>Track Lawnview work from scheduling through completion.</p>
         </div>
 
-        <button className="admin-primary-button" type="button">
+        <button 
+          className="admin-primary-button" 
+          type="button"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
           Create Job
         </button>
       </header>
@@ -82,19 +125,25 @@ function AdminJobsPage() {
       <section className="admin-metrics admin-estimate-metrics">
         <article className="admin-metric-card">
           <p>Scheduled</p>
-          <strong>1</strong>
+          <strong>
+            {jobs.filter((job) => job.status === "Scheduled").length}
+          </strong>
           <span>Upcoming work</span>
         </article>
 
         <article className="admin-metric-card">
           <p>In Progress</p>
-          <strong>1</strong>
+          <strong>
+            {jobs.filter((job) => job.status === "In Progress").length}
+          </strong>
           <span>Currently being serviced</span>
         </article>
 
         <article className="admin-metric-card">
           <p>Completed</p>
-          <strong>1</strong>
+          <strong>
+            {jobs.filter((job) => job.status === "Completed").length}
+          </strong>
           <span>Finished jobs</span>
         </article>
       </section>
@@ -191,6 +240,14 @@ function AdminJobsPage() {
           </div>
         )}
       </section>
+      {isCreateModalOpen && (
+        <CreateJobModal
+          approvedEstimates={approvedEstimates}
+          customers={customers}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={handleCreateJob}
+        />
+      )}
     </>
   );
 }
