@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import CreateEstimateModal from "../components/CreateEstimateModal";
+import EstimateDetailsModal from "../components/EstimateDetailsModal";
 
 const sampleEstimates = [
   {
@@ -61,6 +62,7 @@ function AdminEstimatesPage() {
   const [estimates, setEstimates] = useState(loadSavedEstimates);
   const [customers] = useState(loadSavedCustomers);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedEstimate, setSelectedEstimate] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -71,6 +73,16 @@ function AdminEstimatesPage() {
 function handleCreateEstimate(estimate) {
   setEstimates((currentEstimates) => [estimate, ...currentEstimates]);
   setIsCreateModalOpen(false);
+}
+
+function handleSaveEstimate(updatedEstimate) {
+  setEstimates((currentEstimates) =>
+    currentEstimates.map((estimate) =>
+      estimate.id === updatedEstimate.id ? updatedEstimate : estimate,
+    ),
+  );
+
+  setSelectedEstimate(null);
 }
 
   const filteredEstimates = useMemo(() => {
@@ -203,7 +215,11 @@ function handleCreateEstimate(estimate) {
                   </td>
 
                   <td>
-                    <button className="admin-text-button" type="button">
+                    <button 
+                      className="admin-text-button" 
+                      type="button"
+                      onClick={() => setSelectedEstimate({ ...estimate})}
+                    >
                       View
                     </button>
                   </td>
@@ -225,6 +241,14 @@ function handleCreateEstimate(estimate) {
           customers={customers}
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateEstimate}
+        />
+      )}
+
+      {selectedEstimate && (
+        <EstimateDetailsModal
+          estimate={selectedEstimate}
+          onClose={() => setSelectedEstimate(null)}
+          onSave={handleSaveEstimate}
         />
       )}
     </>
