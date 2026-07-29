@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import CreateJobModal from "../components/CreateJobModal";
+import JobDetailsModal from "../components/JobDetailsModal";
 
 const sampleJobs = [
   {
@@ -72,6 +73,7 @@ function AdminJobsPage() {
   );
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -82,6 +84,16 @@ useEffect(() => {
 function handleCreateJob(job) {
   setJobs((currentJobs) => [job, ...currentJobs]);
   setIsCreateModalOpen(false);
+}
+
+function handleSaveJob(updatedJob) {
+  setJobs((currentJobs) =>
+    currentJobs.map((job) =>
+      job.id === updatedJob.id ? updatedJob : job,
+    ),
+  );
+
+  setSelectedJob(null);
 }
 
   const filteredJobs = useMemo(() => {
@@ -223,7 +235,11 @@ function handleCreateJob(job) {
                   </td>
 
                   <td>
-                    <button className="admin-text-button" type="button">
+                    <button 
+                      className="admin-text-button" 
+                      type="button"
+                      onClick={() => setSelectedJob({ ...job })}
+                    >
                       View
                     </button>
                   </td>
@@ -246,6 +262,13 @@ function handleCreateJob(job) {
           customers={customers}
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateJob}
+        />
+      )}
+      {selectedJob && (
+        <JobDetailsModal
+          job={selectedJob}
+          onClose={() => setSelectedJob(null)}
+          onSave={handleSaveJob}
         />
       )}
     </>
