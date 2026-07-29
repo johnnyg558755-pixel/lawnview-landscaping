@@ -1043,3 +1043,35 @@
     justify-self: start;
   }
 }
+
+.admin-status-unpaid {
+  background: #fff3d9;
+  color: #8a5a00;
+}
+
+.admin-status-paid {
+  background: var(--admin-green-light);
+  color: var(--admin-green-dark);
+}
+
+.admin-status-overdue {
+  background: #fde9e7;
+  color: #a43c32;
+}
+
+.admin-invoices-table td:first-child strong,
+.admin-invoices-table td:first-child span {
+  display: block;
+}
+
+.admin-invoices-table td:first-child span {
+  margin-top: 5px;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 700px) {
+  .admin-invoices-table {
+    min-width: 1050px;
+  }
+}

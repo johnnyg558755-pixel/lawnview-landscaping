@@ -21,6 +21,7 @@ import AdminCustomersPage from "./admin/pages/AdminCustomersPage";
 import AdminEstimatesPage from "./admin/pages/AdminEstimatesPage";
 import AdminJobsPage from "./admin/pages/AdminJobsPage";
 import AdminSchedulePage from "./admin/pages/AdminSchedulePage";
+import AdminInvoicesPage from "./admin/pages/AdminInvoicesPage";
 
 function HomePage() {
   return (
@@ -119,6 +120,7 @@ function App() {
         <Route path="estimates" element={<AdminEstimatesPage />} />
         <Route path="jobs" element={<AdminJobsPage />} />
         <Route path="schedule" element={<AdminSchedulePage />} />
+        <Route path="invoices" element={<AdminInvoicesPage />} />
       </Route>
     </Routes>
   );
