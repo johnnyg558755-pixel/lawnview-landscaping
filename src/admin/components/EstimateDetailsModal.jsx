@@ -1,4 +1,9 @@
 import { useMemo, useState } from "react";
+import {
+  createEstimatePdf,
+  downloadPdf,
+  sharePdf,
+} from "../utils/pdfDocuments";
 
 function EstimateDetailsModal({ estimate, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -35,7 +40,36 @@ function EstimateDetailsModal({ estimate, onClose, onSave }) {
     });
   }
 
+  function getCurrentEstimate() {
+    return {
+      ...formData,
+      amount: total,
+    };
+  }
+
+  function handleDownloadPdf() {
+    const currentEstimate = getCurrentEstimate();
+    const doc = createEstimatePdf(currentEstimate);
+
+    downloadPdf(
+      doc,
+      `${currentEstimate.id}-${currentEstimate.customer}-estimate.pdf`,
+    );
+  }
+
+  async function handleSharePdf() {
+    const currentEstimate = getCurrentEstimate();
+    const doc = createEstimatePdf(currentEstimate);
+
+    await sharePdf(
+      doc,
+      `${currentEstimate.id}-${currentEstimate.customer}-estimate.pdf`,
+      `Lawnview Estimate ${currentEstimate.id}`,
+    );
+  }
+
   return (
+
     <div
       className="admin-modal-backdrop"
       role="presentation"
@@ -176,6 +210,26 @@ function EstimateDetailsModal({ estimate, onClose, onSave }) {
               placeholder="Describe the work included in this estimate"
             />
           </label>
+
+          <div className="admin-document-actions">
+            <button
+              className="admin-secondary-button"
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={total <= 0}
+            >
+              Download PDF
+            </button>
+
+            <button
+              className="admin-secondary-button"
+              type="button"
+              onClick={handleSharePdf}
+              disabled={total <= 0}
+            >
+              Share PDF
+            </button>
+          </div>
 
           <div className="admin-modal-actions">
             <button

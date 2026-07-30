@@ -1808,3 +1808,25 @@
     min-height: 52px;
   }
 }
+
+.admin-document-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--admin-border);
+}
+
+@media (max-width: 600px) {
+  .admin-document-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .admin-document-actions button {
+    width: 100%;
+    min-height: 50px;
+  }
+}

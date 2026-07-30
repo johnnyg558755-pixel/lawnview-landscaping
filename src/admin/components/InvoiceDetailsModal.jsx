@@ -1,4 +1,9 @@
 import { useState } from "react";
+import {
+  createInvoicePdf,
+  downloadPdf,
+  sharePdf,
+} from "../utils/pdfDocuments";
 
 function formatDate(value) {
   return new Date(`${value}T12:00:00`).toLocaleDateString("en-US", {
@@ -42,6 +47,40 @@ function InvoiceDetailsModal({ invoice, onClose, onSave }) {
           ? invoice.paidAt || new Date().toISOString()
           : "",
     });
+  }
+
+  function getCurrentInvoice() {
+    return {
+      ...invoice,
+      status: formData.status,
+      displayStatus: formData.status,
+      dueValue: formData.dueValue,
+      due: formData.dueValue
+        ? formatDate(formData.dueValue)
+        : invoice.due,
+      paymentMethod: formData.paymentMethod,
+    };
+  }
+
+  function handleDownloadPdf() {
+    const currentInvoice = getCurrentInvoice();
+    const doc = createInvoicePdf(currentInvoice);
+
+    downloadPdf(
+      doc,
+      `${currentInvoice.id}-${currentInvoice.customer}-invoice.pdf`,
+    );
+  }
+
+  async function handleSharePdf() {
+    const currentInvoice = getCurrentInvoice();
+    const doc = createInvoicePdf(currentInvoice);
+
+    await sharePdf(
+      doc,
+      `${currentInvoice.id}-${currentInvoice.customer}-invoice.pdf`,
+      `Lawnview Invoice ${currentInvoice.id}`,
+    );
   }
 
   function handleSubmit(event) {
@@ -162,6 +201,24 @@ function InvoiceDetailsModal({ invoice, onClose, onSave }) {
               rows="5"
             />
           </label>
+
+          <div className="admin-document-actions">
+            <button
+              className="admin-secondary-button"
+              type="button"
+              onClick={handleDownloadPdf}
+            >
+              Download PDF
+            </button>
+
+            <button
+              className="admin-secondary-button"
+              type="button"
+              onClick={handleSharePdf}
+            >
+              Share PDF
+            </button>
+          </div>
 
           <div className="admin-modal-actions">
             <button

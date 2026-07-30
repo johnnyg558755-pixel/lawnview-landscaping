@@ -22,6 +22,7 @@ function CreateInvoiceModal({ completedJobs, onClose, onCreate }) {
   const [formData, setFormData] = useState({
     jobId: "",
     customer: "",
+    address: "",
     service: "",
     amount: "",
     issuedValue: getToday(),
@@ -39,6 +40,7 @@ function CreateInvoiceModal({ completedJobs, onClose, onCreate }) {
       ...current,
       jobId,
       customer: selectedJob?.customer || selectedJob?.name || "",
+      address: selectedJob?.address || selectedJob?.location || "",
       service: selectedJob?.service || "",
       amount: selectedJob?.amount ?? "",
     }));
@@ -60,6 +62,7 @@ function CreateInvoiceModal({ completedJobs, onClose, onCreate }) {
       id: `INV-${Date.now().toString().slice(-6)}`,
       jobId: formData.jobId,
       customer: formData.customer.trim(),
+      address: formData.address.trim(),
       service: formData.service.trim(),
       amount: Number(formData.amount),
       issued: formatDate(formData.issuedValue),
