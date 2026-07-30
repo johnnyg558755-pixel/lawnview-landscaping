@@ -1,72 +1,173 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import CreateInvoiceModal from "../components/CreateInvoiceModal";
+import InvoiceDetailsModal from "../components/InvoiceDetailsModal";
+
+const INVOICES_STORAGE_KEY = "lawnview-admin-invoices";
+const JOBS_STORAGE_KEY = "lawnview-admin-jobs";
 
 const sampleInvoices = [
   {
     id: "INV-1003",
+    jobId: "JOB-1001",
     customer: "Angela Williams",
     service: "Mulch Installation",
     amount: 285,
     issued: "Jul 25, 2026",
     due: "Aug 1, 2026",
+    issuedValue: "2026-07-25",
+    dueValue: "2026-08-01",
     status: "Paid",
+    paymentMethod: "Zelle",
+    notes: "",
   },
   {
     id: "INV-1002",
+    jobId: "JOB-1002",
     customer: "David Thompson",
     service: "Property Cleanup",
     amount: 175,
     issued: "Jul 27, 2026",
     due: "Aug 3, 2026",
+    issuedValue: "2026-07-27",
+    dueValue: "2026-08-03",
     status: "Unpaid",
+    paymentMethod: "",
+    notes: "",
   },
   {
     id: "INV-1001",
+    jobId: "JOB-1003",
     customer: "Maria Hernandez",
     service: "Weekly Lawn Mowing",
     amount: 55,
     issued: "Jul 20, 2026",
     due: "Jul 27, 2026",
+    issuedValue: "2026-07-20",
+    dueValue: "2026-07-27",
     status: "Overdue",
+    paymentMethod: "",
+    notes: "",
   },
 ];
+
+function readStorage(key, fallback) {
+  try {
+    const storedData = localStorage.getItem(key);
+    return storedData ? JSON.parse(storedData) : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(amount);
+  }).format(Number(amount) || 0);
+}
+
+function getInvoiceStatus(invoice) {
+  if (
+    invoice.status === "Unpaid" &&
+    invoice.dueValue &&
+    invoice.dueValue < new Date().toISOString().split("T")[0]
+  ) {
+    return "Overdue";
+  }
+
+  return invoice.status;
 }
 
 function AdminInvoicesPage() {
+  const [invoices, setInvoices] = useState(() =>
+    readStorage(INVOICES_STORAGE_KEY, sampleInvoices),
+  );
+  const [completedJobs, setCompletedJobs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(INVOICES_STORAGE_KEY, JSON.stringify(invoices));
+  }, [invoices]);
+
+  useEffect(() => {
+    const storedJobs = readStorage(JOBS_STORAGE_KEY, []);
+
+    setCompletedJobs(
+      storedJobs.filter((job) => job.status === "Completed"),
+    );
+  }, []);
+
+  const invoicesWithCurrentStatus = useMemo(
+    () =>
+      invoices.map((invoice) => ({
+        ...invoice,
+        displayStatus: getInvoiceStatus(invoice),
+      })),
+    [invoices],
+  );
+
+  const availableCompletedJobs = useMemo(() => {
+    const invoicedJobIds = new Set(
+      invoices.map((invoice) => invoice.jobId).filter(Boolean),
+    );
+
+    return completedJobs.filter((job) => !invoicedJobIds.has(job.id));
+  }, [completedJobs, invoices]);
 
   const filteredInvoices = useMemo(() => {
-    const search = searchTerm.toLowerCase();
+    const search = searchTerm.trim().toLowerCase();
 
-    return sampleInvoices.filter((invoice) => {
+    return invoicesWithCurrentStatus.filter((invoice) => {
       const matchesSearch =
         invoice.customer.toLowerCase().includes(search) ||
         invoice.service.toLowerCase().includes(search) ||
         invoice.id.toLowerCase().includes(search);
 
       const matchesStatus =
-        statusFilter === "All" || invoice.status === statusFilter;
+        statusFilter === "All" ||
+        invoice.displayStatus === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [invoicesWithCurrentStatus, searchTerm, statusFilter]);
 
-  const outstandingTotal = sampleInvoices
+  const outstandingTotal = invoicesWithCurrentStatus
     .filter((invoice) =>
-      ["Unpaid", "Overdue"].includes(invoice.status),
+      ["Unpaid", "Overdue"].includes(invoice.displayStatus),
     )
-    .reduce((total, invoice) => total + invoice.amount, 0);
+    .reduce((total, invoice) => total + Number(invoice.amount), 0);
 
-  const paidTotal = sampleInvoices
-    .filter((invoice) => invoice.status === "Paid")
-    .reduce((total, invoice) => total + invoice.amount, 0);
+  const paidTotal = invoicesWithCurrentStatus
+    .filter((invoice) => invoice.displayStatus === "Paid")
+    .reduce((total, invoice) => total + Number(invoice.amount), 0);
+
+  const overdueCount = invoicesWithCurrentStatus.filter(
+    (invoice) => invoice.displayStatus === "Overdue",
+  ).length;
+
+  function handleCreateInvoice(invoice) {
+    setInvoices((currentInvoices) => [
+      invoice,
+      ...currentInvoices,
+    ]);
+    setIsCreateModalOpen(false);
+  }
+
+  function handleSaveInvoice(updatedInvoice) {
+    setInvoices((currentInvoices) =>
+      currentInvoices.map((invoice) =>
+        invoice.id === updatedInvoice.id
+          ? updatedInvoice
+          : invoice,
+      ),
+    );
+
+    setSelectedInvoice(null);
+  }
 
   return (
     <>
@@ -78,10 +179,16 @@ function AdminInvoicesPage() {
         <div>
           <p className="admin-eyebrow">Billing</p>
           <h2>Invoices</h2>
-          <p>Bill completed work and track Lawnview customer payments.</p>
+          <p>
+            Bill completed work and track Lawnview customer payments.
+          </p>
         </div>
 
-        <button className="admin-primary-button" type="button">
+        <button
+          className="admin-primary-button"
+          type="button"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
           Create Invoice
         </button>
       </header>
@@ -101,13 +208,7 @@ function AdminInvoicesPage() {
 
         <article className="admin-metric-card">
           <p>Overdue</p>
-          <strong>
-            {
-              sampleInvoices.filter(
-                (invoice) => invoice.status === "Overdue",
-              ).length
-            }
-          </strong>
+          <strong>{overdueCount}</strong>
           <span>Needs follow-up</span>
         </article>
       </section>
@@ -175,14 +276,20 @@ function AdminInvoicesPage() {
 
                   <td>
                     <span
-                      className={`admin-status admin-status-${invoice.status.toLowerCase()}`}
+                      className={`admin-status admin-status-${invoice.displayStatus
+                        .toLowerCase()
+                        .replaceAll(" ", "-")}`}
                     >
-                      {invoice.status}
+                      {invoice.displayStatus}
                     </span>
                   </td>
 
                   <td>
-                    <button className="admin-text-button" type="button">
+                    <button
+                      className="admin-text-button"
+                      type="button"
+                      onClick={() => setSelectedInvoice(invoice)}
+                    >
                       View
                     </button>
                   </td>
@@ -199,6 +306,22 @@ function AdminInvoicesPage() {
           </div>
         )}
       </section>
+
+      {isCreateModalOpen && (
+        <CreateInvoiceModal
+          completedJobs={availableCompletedJobs}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={handleCreateInvoice}
+        />
+      )}
+
+      {selectedInvoice && (
+        <InvoiceDetailsModal
+          invoice={selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
+          onSave={handleSaveInvoice}
+        />
+      )}
     </>
   );
 }
