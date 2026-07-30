@@ -14,6 +14,14 @@ import EstimatePage from "./pages/EstimatePage";
 import ServicesPage from "./pages/ServicesPage";
 import ServiceAreaPage from "./pages/ServiceAreaPage";
 import FAQ from "./components/FAQ";
+import AdminLayout from "./admin/AdminLayout";
+import AdminDashboardPage from "./admin/pages/AdminDashboardPage";
+import AdminInquiriesPage from "./admin/pages/AdminInquiriesPage";
+import AdminCustomersPage from "./admin/pages/AdminCustomersPage";
+import AdminEstimatesPage from "./admin/pages/AdminEstimatesPage";
+import AdminJobsPage from "./admin/pages/AdminJobsPage";
+import AdminSchedulePage from "./admin/pages/AdminSchedulePage";
+import AdminInvoicesPage from "./admin/pages/AdminInvoicesPage";
 
 function HomePage() {
   return (
@@ -102,6 +110,18 @@ function App() {
       <Route path="/estimate" element={<EstimatePage />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/service-area" element={<ServiceAreaPage />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboardPage />} />
+      </Route>
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="inquiries" element={<AdminInquiriesPage />} />
+        <Route path="customers" element={<AdminCustomersPage />} />
+        <Route path="estimates" element={<AdminEstimatesPage />} />
+        <Route path="jobs" element={<AdminJobsPage />} />
+        <Route path="schedule" element={<AdminSchedulePage />} />
+        <Route path="invoices" element={<AdminInvoicesPage />} />
+      </Route>
     </Routes>
   );
 }
