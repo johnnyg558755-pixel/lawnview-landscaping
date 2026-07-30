@@ -1075,3 +1075,57 @@
     min-width: 1050px;
   }
 }
+
+.admin-dashboard-list {
+  display: grid;
+}
+
+.admin-dashboard-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 30px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-dashboard-list-item:first-child {
+  border-top: 0;
+}
+
+.admin-dashboard-list-item > div:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-dashboard-list-item strong {
+  color: var(--admin-text);
+}
+
+.admin-dashboard-list-item span,
+.admin-dashboard-list-item small {
+  color: var(--admin-muted);
+}
+
+.admin-dashboard-list-meta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  text-align: right;
+}
+
+.admin-dashboard-list-meta .admin-status {
+  color: inherit;
+}
+
+@media (max-width: 700px) {
+  .admin-dashboard-list-item {
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .admin-dashboard-list-meta {
+    justify-items: start;
+    text-align: left;
+  }
+}

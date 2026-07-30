@@ -1,6 +1,132 @@
+import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link, useNavigate } from "react-router-dom";
+
+const INQUIRIES_STORAGE_KEY = "lawnview-admin-inquiries";
+const ESTIMATES_STORAGE_KEY = "lawnview-admin-estimates";
+const JOBS_STORAGE_KEY = "lawnview-admin-jobs";
+const INVOICES_STORAGE_KEY = "lawnview-admin-invoices";
+
+function readStorage(key) {
+  try {
+    const storedData = localStorage.getItem(key);
+    return storedData ? JSON.parse(storedData) : [];
+  } catch {
+    return [];
+  }
+}
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number(amount) || 0);
+}
+
+function getJobDate(job) {
+  return (
+    job.appointmentDateValue ||
+    job.dateValue ||
+    job.appointmentDate ||
+    job.date ||
+    ""
+  );
+}
+
+function getJobTime(job) {
+  return job.appointmentTime || job.time || "";
+}
+
+function formatJobDate(value) {
+  if (!value) return "Date not set";
+
+  const date = new Date(
+    value.includes("T") ? value : `${value}T12:00:00`,
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatJobTime(value) {
+  if (!value) return "Time not set";
+
+  if (value.includes("AM") || value.includes("PM")) {
+    return value;
+  }
+
+  const [hours, minutes] = value.split(":");
+  const date = new Date();
+  date.setHours(Number(hours), Number(minutes), 0, 0);
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getInvoiceStatus(invoice) {
+  const today = new Date().toISOString().split("T")[0];
+
+  if (
+    invoice.status === "Unpaid" &&
+    invoice.dueValue &&
+    invoice.dueValue < today
+  ) {
+    return "Overdue";
+  }
+
+  return invoice.status;
+}
 
 function AdminDashboardPage() {
+  const navigate = useNavigate();
+
+  const inquiries = readStorage(INQUIRIES_STORAGE_KEY);
+  const estimates = readStorage(ESTIMATES_STORAGE_KEY);
+  const jobs = readStorage(JOBS_STORAGE_KEY);
+  const invoices = readStorage(INVOICES_STORAGE_KEY);
+
+  const newInquiries = inquiries.filter(
+    (inquiry) => inquiry.status === "New",
+  );
+
+  const pendingEstimates = estimates.filter((estimate) =>
+    ["Draft", "Sent"].includes(estimate.status),
+  );
+
+  const scheduledJobs = useMemo(
+    () =>
+      jobs
+        .filter((job) => job.status === "Scheduled")
+        .sort((firstJob, secondJob) => {
+          const firstDate = new Date(getJobDate(firstJob)).getTime();
+          const secondDate = new Date(getJobDate(secondJob)).getTime();
+
+          return firstDate - secondDate;
+        }),
+    [jobs],
+  );
+
+  const outstandingInvoices = invoices.filter((invoice) =>
+    ["Unpaid", "Overdue"].includes(getInvoiceStatus(invoice)),
+  );
+
+  const outstandingTotal = outstandingInvoices.reduce(
+    (total, invoice) => total + Number(invoice.amount),
+    0,
+  );
+
+  const recentInquiries = inquiries.slice(0, 3);
+  const upcomingJobs = scheduledJobs.slice(0, 3);
+
   return (
     <>
       <Helmet>
@@ -14,7 +140,11 @@ function AdminDashboardPage() {
           <p>Manage Lawnview’s leads, jobs, estimates, and payments.</p>
         </div>
 
-        <button className="admin-primary-button" type="button">
+        <button
+          className="admin-primary-button"
+          type="button"
+          onClick={() => navigate("/admin/inquiries")}
+        >
           Add Inquiry
         </button>
       </header>
@@ -22,26 +152,31 @@ function AdminDashboardPage() {
       <section className="admin-metrics" aria-label="Business overview">
         <article className="admin-metric-card">
           <p>New Inquiries</p>
-          <strong>4</strong>
+          <strong>{newInquiries.length}</strong>
           <span>Awaiting follow-up</span>
         </article>
 
         <article className="admin-metric-card">
           <p>Pending Estimates</p>
-          <strong>3</strong>
-          <span>Needs customer approval</span>
+          <strong>{pendingEstimates.length}</strong>
+          <span>Draft or awaiting approval</span>
         </article>
 
         <article className="admin-metric-card">
           <p>Scheduled Jobs</p>
-          <strong>5</strong>
-          <span>This week</span>
+          <strong>{scheduledJobs.length}</strong>
+          <span>Upcoming work</span>
         </article>
 
         <article className="admin-metric-card">
           <p>Unpaid Invoices</p>
-          <strong>$420</strong>
-          <span>Across 2 customers</span>
+          <strong>{formatCurrency(outstandingTotal)}</strong>
+          <span>
+            Across {outstandingInvoices.length}{" "}
+            {outstandingInvoices.length === 1
+              ? "invoice"
+              : "invoices"}
+          </span>
         </article>
       </section>
 
@@ -53,16 +188,55 @@ function AdminDashboardPage() {
               <h3>Recent inquiries</h3>
             </div>
 
-            <a href="/admin/inquiries">View all</a>
+            <Link to="/admin/inquiries">View all</Link>
           </div>
 
-          <div className="admin-empty-state">
-            <h4>Your newest leads will appear here</h4>
-            <p>
-              During Phase 4, estimate requests from the Lawnview website will
-              automatically enter this dashboard.
-            </p>
-          </div>
+          {recentInquiries.length > 0 ? (
+            <div className="admin-dashboard-list">
+              {recentInquiries.map((inquiry) => (
+                <div
+                  className="admin-dashboard-list-item"
+                  key={inquiry.id}
+                >
+                  <div>
+                    <strong>
+                      {inquiry.name ||
+                        inquiry.customer ||
+                        "Unnamed lead"}
+                    </strong>
+
+                    <span>
+                      {inquiry.service || "Service not selected"}
+                    </span>
+                  </div>
+
+                  <div className="admin-dashboard-list-meta">
+                    <span
+                      className={`admin-status admin-status-${inquiry.status
+                        .toLowerCase()
+                        .replaceAll(" ", "-")}`}
+                    >
+                      {inquiry.status}
+                    </span>
+
+                    <small>
+                      {inquiry.received ||
+                        inquiry.date ||
+                        inquiry.id}
+                    </small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="admin-empty-state">
+              <h4>Your newest leads will appear here</h4>
+              <p>
+                Phase 4 will connect website estimate requests directly
+                to this dashboard.
+              </p>
+            </div>
+          )}
         </article>
 
         <article className="admin-panel">
@@ -72,13 +246,40 @@ function AdminDashboardPage() {
               <h3>Schedule</h3>
             </div>
 
-            <a href="/admin/schedule">View schedule</a>
+            <Link to="/admin/schedule">View schedule</Link>
           </div>
 
-          <div className="admin-empty-state">
-            <h4>No jobs scheduled yet</h4>
-            <p>Approved estimates will become scheduled Lawnview jobs.</p>
-          </div>
+          {upcomingJobs.length > 0 ? (
+            <div className="admin-dashboard-list">
+              {upcomingJobs.map((job) => (
+                <div
+                  className="admin-dashboard-list-item"
+                  key={job.id}
+                >
+                  <div>
+                    <strong>
+                      {job.customer || job.name || "Customer"}
+                    </strong>
+
+                    <span>{job.service}</span>
+                  </div>
+
+                  <div className="admin-dashboard-list-meta">
+                    <strong>{formatJobDate(getJobDate(job))}</strong>
+                    <small>{formatJobTime(getJobTime(job))}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="admin-empty-state">
+              <h4>No jobs scheduled yet</h4>
+              <p>
+                Approved estimates can be converted into scheduled
+                Lawnview jobs.
+              </p>
+            </div>
+          )}
         </article>
       </section>
     </>
