@@ -1,82 +1,98 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AddInquiryModal from "../components/AddInquiryModal";
+import {
+  createInquiry,
+  fetchInquiries,
+  updateInquiry,
+} from "../services/adminData";
 
-
-const sampleInquiries = [
-  {
-    id: "LV-1004",
-    name: "Maria Hernandez",
-    phone: "(214) 555-0148",
-    email: "maria@example.com",
-    address: "Mesquite, TX",
-    service: "Lawn Mowing",
-    date: "Jul 26, 2026",
-    status: "New",
-    message: "Interested in weekly mowing and edging service.",
-    notes: "",
-  },
-  {
-    id: "LV-1003",
-    name: "David Thompson",
-    phone: "(469) 555-0182",
-    email: "david@example.com",
-    address: "Mesquite, TX",
-    service: "Property Cleanup",
-    date: "Jul 25, 2026",
-    status: "Contacted",
-    message: "Needs leaves, branches, and debris removed.",
-    notes: "Called and left a voicemail.",
-  },
-  {
-    id: "LV-1002",
-    name: "Angela Williams",
-    phone: "(972) 555-0165",
-    email: "angela@example.com",
-    address: "Mesquite, TX",
-    service: "Mulch Installation",
-    date: "Jul 24, 2026",
-    status: "Estimate Sent",
-    message: "Would like new mulch installed in the front flower beds.",
-    notes: "Estimate sent by text.",
-  },
-  {
-    id: "LV-1001",
-    name: "Carlos Ramirez",
-    phone: "(214) 555-0191",
-    email: "carlos@example.com",
-    address: "Mesquite, TX",
-    service: "Lawn Mowing",
-    date: "Jul 23, 2026",
-    status: "Closed",
-    message: "Requested a one-time mowing service.",
-    notes: "Customer hired another company.",
-  },
-];
-
-const INQUIRIES_STORAGE_KEY = "lawnview-admin-inquiries";
-
-function loadSavedInquiries() {
-  try {
-    const savedInquiries = localStorage.getItem(INQUIRIES_STORAGE_KEY);
-
-    return savedInquiries ? JSON.parse(savedInquiries) : sampleInquiries;
-  } catch {
-    return sampleInquiries;
-  }
-}
 
 function AdminInquiriesPage() {
-  const [inquiries, setInquiries] = useState(loadSavedInquiries);
+  const [inquiries, setInquiries] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(INQUIRIES_STORAGE_KEY, JSON.stringify(inquiries));
+    let isActive = true;
 
-  }, [inquiries]);
+    async function loadInquiries() {
+      try {
+        const cloudInquiries = await fetchInquiries();
+
+        if (isActive) {
+          setInquiries(cloudInquiries);
+        }
+      } catch (error) {
+        console.error("Unable to load inquiries:", error);
+
+        if (isActive) {
+          setDataError(
+            "Unable to load inquiries. Check your connection and try again.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadInquiries();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  async function handleAddInquiry(inquiry) {
+    setDataError("");
+
+    try {
+      const savedInquiry = await createInquiry(inquiry);
+
+      setInquiries((currentInquiries) => [
+        savedInquiry,
+        ...currentInquiries,
+      ]);
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error("Unable to create inquiry:", error);
+      setDataError(
+        "The inquiry could not be saved. Please try again.",
+      );
+    }
+  }
+
+  async function handleSaveInquiry(event) {
+    event.preventDefault();
+    setDataError("");
+
+    try {
+      const savedInquiry = await updateInquiry(
+        selectedInquiry,
+      );
+
+      setInquiries((currentInquiries) =>
+        currentInquiries.map((inquiry) =>
+          inquiry.id === savedInquiry.id
+            ? savedInquiry
+            : inquiry,
+        ),
+      );
+
+      setSelectedInquiry(null);
+    } catch (error) {
+      console.error("Unable to update inquiry:", error);
+      setDataError(
+        "The inquiry changes could not be saved.",
+      );
+    }
+  }
 
   const filteredInquiries = useMemo(() => {
     return inquiries.filter((inquiry) => {
@@ -88,28 +104,12 @@ function AdminInquiriesPage() {
         inquiry.service.toLowerCase().includes(search);
 
       const matchesStatus =
-        statusFilter === "All" || inquiry.status === statusFilter;
+        statusFilter === "All" ||
+        inquiry.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [inquiries, searchTerm, statusFilter]);
-
-  function handleAddInquiry(inquiry) {
-    setInquiries((currentInquiries) => [inquiry, ...currentInquiries]);
-    setIsAddModalOpen(false);
-  }
-
-  function handleSaveInquiry(event) {
-    event.preventDefault();
-
-    setInquiries((currentInquiries) =>
-      currentInquiries.map((inquiry) =>
-        inquiry.id === selectedInquiry.id ? selectedInquiry : inquiry,
-      ),
-    );
-
-    setSelectedInquiry(null);
-  }
 
   return (
     <>
@@ -132,6 +132,18 @@ function AdminInquiriesPage() {
           Add Inquiry
         </button>
       </header>
+
+      {dataError && (
+        <p className="admin-login-error" role="alert">
+          {dataError}
+        </p>
+      )}
+
+      {isLoading && (
+        <p className="admin-loading-message">
+          Loading inquiries…
+        </p>
+      )}
 
       <section className="admin-panel admin-inquiries-panel">
         <div className="admin-toolbar">

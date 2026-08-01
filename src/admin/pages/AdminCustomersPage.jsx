@@ -2,69 +2,72 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import AddCustomerModal from "../components/AddCustomerModal";
 import CustomerDetailsModal from "../components/CustomerDetailsModal";
+import {
+  createCustomer,
+  fetchCustomers,
+  updateCustomer,
+} from "../services/adminData";
 
-const sampleCustomers = [
-  {
-    id: "CUST-1003",
-    name: "Angela Williams",
-    phone: "(972) 555-0165",
-    email: "angela@example.com",
-    address: "Mesquite, TX",
-    service: "Mulch Installation",
-    jobs: 1,
-    lastService: "Jul 24, 2026",
-    status: "Active",
-  },
-  {
-    id: "CUST-1002",
-    name: "David Thompson",
-    phone: "(469) 555-0182",
-    email: "david@example.com",
-    address: "Mesquite, TX",
-    service: "Property Cleanup",
-    jobs: 2,
-    lastService: "Jul 18, 2026",
-    status: "Active",
-  },
-  {
-    id: "CUST-1001",
-    name: "Carlos Ramirez",
-    phone: "(214) 555-0191",
-    email: "carlos@example.com",
-    address: "Mesquite, TX",
-    service: "Lawn Mowing",
-    jobs: 4,
-    lastService: "Jul 12, 2026",
-    status: "Inactive",
-  },
-];
 
-const CUSTOMERS_STORAGE_KEY = "lawnview-admin-customers";
-
-function loadSavedCustomers() {
-  try {
-    const savedCustomers = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
-
-    return savedCustomers ? JSON.parse(savedCustomers) : sampleCustomers;
-  } catch {
-    return sampleCustomers;
-  }
-}
 
 function AdminCustomersPage() {
-  const [customers, setCustomers] = useState(loadSavedCustomers);
+  const [customers, setCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
-    localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
-  }, [customers]);
+    let isActive = true;
 
-  function handleAddCustomer(customer) {
-    setCustomers((currentCustomers) => [customer, ...currentCustomers]);
-    setIsAddModalOpen(false);
+    async function loadCustomers() {
+      try {
+        const cloudCustomers = await fetchCustomers();
+
+        if (isActive) {
+          setCustomers(cloudCustomers);
+        }
+      } catch (error) {
+        console.error("Unable to load customers:", error);
+
+        if (isActive) {
+          setDataError(
+            "Unable to load customers. Check your connection and try again.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadCustomers();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  async function handleAddCustomer(customer) {
+    setDataError("");
+
+    try {
+      const savedCustomer = await createCustomer(customer);
+
+      setCustomers((currentCustomers) => [
+        savedCustomer,
+        ...currentCustomers,
+      ]);
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error("Unable to create customer:", error);
+      setDataError(
+        "The customer could not be saved. Please try again.",
+      );
+    }
   }
 
   function handleSaveCustomer(updatedCustomer) {
@@ -114,6 +117,18 @@ function AdminCustomersPage() {
           Add Customer
         </button>
       </header>
+
+      {dataError && (
+        <p className="admin-login-error" role="alert">
+          {dataError}
+        </p>
+      )}
+
+      {isLoading && (
+        <p className="admin-loading-message">
+          Loading customers…
+        </p>
+      )}
 
       <section className="admin-panel admin-inquiries-panel">
         <div className="admin-toolbar">
