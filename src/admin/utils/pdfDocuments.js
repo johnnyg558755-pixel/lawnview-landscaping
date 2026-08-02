@@ -22,59 +22,11 @@ function safeFilename(value) {
 }
 
 function findCustomerAddress(document) {
-  if (document.address) {
-    return document.address;
-  }
-
-  if (document.location) {
-    return document.location;
-  }
-
-  const customerName = String(
-    document.customer || "",
-  )
-    .trim()
-    .toLowerCase();
-
-  if (!customerName) {
-    return "Address not provided";
-  }
-
-  const storageKeys = [
-    "lawnview-admin-customers",
-    "lawnview-admin-jobs",
-    "lawnview-admin-inquiries",
-  ];
-
-  for (const key of storageKeys) {
-    try {
-      const records = JSON.parse(
-        localStorage.getItem(key) || "[]",
-      );
-
-      const matchingRecord = records.find((record) => {
-        const recordName = String(
-          record.name || record.customer || "",
-        )
-          .trim()
-          .toLowerCase();
-
-        return recordName === customerName;
-      });
-
-      const address =
-        matchingRecord?.address ||
-        matchingRecord?.location;
-
-      if (address) {
-        return address;
-      }
-    } catch {
-      // Continue checking the other saved data collections.
-    }
-  }
-
-  return "Address not provided";
+  return (
+    document.address ||
+    document.location ||
+    "Address not provided"
+  );
 }
 
 function createDocument(type, id, status) {

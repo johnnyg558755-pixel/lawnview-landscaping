@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import {
   NavLink,
   Outlet,
-  useLocation,
+  useNavigate,
 } from "react-router-dom";
 import "./AdminLayout.css";
+import { useAuth } from "../auth/AuthContext";
 
 const adminLinks = [
   { to: "/admin", label: "Dashboard", end: true },
@@ -17,12 +18,12 @@ const adminLinks = [
 ];
 
 function AdminLayout() {
-  const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
+
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -37,6 +38,20 @@ function AdminLayout() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  async function handleSignOut() {
+    setIsSigningOut(true);
+
+    const { error } = await signOut();
+
+    if (error) {
+      console.error("Unable to sign out:", error);
+      setIsSigningOut(false);
+      return;
+    }
+
+    navigate("/admin/login", { replace: true });
+  }
 
   return (
     <div className="admin-layout">
@@ -119,6 +134,15 @@ function AdminLayout() {
           >
             View Website
           </NavLink>
+
+          <button
+            className="admin-signout-button"
+            type="button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+          >
+            {isSigningOut ? "Signing out…" : "Sign out"}
+          </button>
         </div>
       </aside>
 

@@ -5,7 +5,13 @@ import {
   sharePdf,
 } from "../utils/pdfDocuments";
 
-function EstimateDetailsModal({ estimate, onClose, onSave }) {
+function EstimateDetailsModal({
+  estimate,
+  customers = [],
+  onClose,
+  onSave,
+}) {
+
   const [formData, setFormData] = useState({
     ...estimate,
     labor: estimate.labor ?? estimate.amount,
@@ -41,9 +47,15 @@ function EstimateDetailsModal({ estimate, onClose, onSave }) {
   }
 
   function getCurrentEstimate() {
+    const customerAddress =
+      customers.find(
+        (customer) => customer.name === formData.customer,
+      )?.address || "";
+
     return {
       ...formData,
       amount: total,
+      address: customerAddress,
     };
   }
 

@@ -2,63 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import CreateInvoiceModal from "../components/CreateInvoiceModal";
 import InvoiceDetailsModal from "../components/InvoiceDetailsModal";
+import {
+  createInvoice,
+  fetchInvoices,
+  fetchJobs,
+  updateInvoice,
+} from "../services/adminData";
 
-const INVOICES_STORAGE_KEY = "lawnview-admin-invoices";
-const JOBS_STORAGE_KEY = "lawnview-admin-jobs";
 
-const sampleInvoices = [
-  {
-    id: "INV-1003",
-    jobId: "JOB-1001",
-    customer: "Angela Williams",
-    service: "Mulch Installation",
-    amount: 285,
-    issued: "Jul 25, 2026",
-    due: "Aug 1, 2026",
-    issuedValue: "2026-07-25",
-    dueValue: "2026-08-01",
-    status: "Paid",
-    paymentMethod: "Zelle",
-    notes: "",
-  },
-  {
-    id: "INV-1002",
-    jobId: "JOB-1002",
-    customer: "David Thompson",
-    service: "Property Cleanup",
-    amount: 175,
-    issued: "Jul 27, 2026",
-    due: "Aug 3, 2026",
-    issuedValue: "2026-07-27",
-    dueValue: "2026-08-03",
-    status: "Unpaid",
-    paymentMethod: "",
-    notes: "",
-  },
-  {
-    id: "INV-1001",
-    jobId: "JOB-1003",
-    customer: "Maria Hernandez",
-    service: "Weekly Lawn Mowing",
-    amount: 55,
-    issued: "Jul 20, 2026",
-    due: "Jul 27, 2026",
-    issuedValue: "2026-07-20",
-    dueValue: "2026-07-27",
-    status: "Overdue",
-    paymentMethod: "",
-    notes: "",
-  },
-];
-
-function readStorage(key, fallback) {
-  try {
-    const storedData = localStorage.getItem(key);
-    return storedData ? JSON.parse(storedData) : fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-US", {
@@ -80,25 +31,54 @@ function getInvoiceStatus(invoice) {
 }
 
 function AdminInvoicesPage() {
-  const [invoices, setInvoices] = useState(() =>
-    readStorage(INVOICES_STORAGE_KEY, sampleInvoices),
-  );
+  const [invoices, setInvoices] = useState([]);
   const [completedJobs, setCompletedJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem(INVOICES_STORAGE_KEY, JSON.stringify(invoices));
-  }, [invoices]);
+    let isActive = true;
 
-  useEffect(() => {
-    const storedJobs = readStorage(JOBS_STORAGE_KEY, []);
+    async function loadInvoiceData() {
+      try {
+        const [cloudInvoices, cloudJobs] =
+          await Promise.all([
+            fetchInvoices(),
+            fetchJobs(),
+          ]);
 
-    setCompletedJobs(
-      storedJobs.filter((job) => job.status === "Completed"),
-    );
+        if (isActive) {
+          setInvoices(cloudInvoices);
+          setCompletedJobs(
+            cloudJobs.filter(
+              (job) => job.status === "Completed",
+            ),
+          );
+        }
+      } catch (error) {
+        console.error("Unable to load invoices:", error);
+
+        if (isActive) {
+          setDataError(
+            "Unable to load invoices. Check your connection and try again.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadInvoiceData();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const invoicesWithCurrentStatus = useMemo(
@@ -149,24 +129,48 @@ function AdminInvoicesPage() {
     (invoice) => invoice.displayStatus === "Overdue",
   ).length;
 
-  function handleCreateInvoice(invoice) {
-    setInvoices((currentInvoices) => [
-      invoice,
-      ...currentInvoices,
-    ]);
-    setIsCreateModalOpen(false);
+  async function handleCreateInvoice(invoice) {
+    setDataError("");
+
+    try {
+      const savedInvoice = await createInvoice(invoice);
+
+      setInvoices((currentInvoices) => [
+        savedInvoice,
+        ...currentInvoices,
+      ]);
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error("Unable to create invoice:", error);
+      setDataError(
+        "The invoice could not be saved. Please try again.",
+      );
+    }
   }
 
-  function handleSaveInvoice(updatedInvoice) {
-    setInvoices((currentInvoices) =>
-      currentInvoices.map((invoice) =>
-        invoice.id === updatedInvoice.id
-          ? updatedInvoice
-          : invoice,
-      ),
-    );
+  async function handleSaveInvoice(updatedInvoice) {
+    setDataError("");
 
-    setSelectedInvoice(null);
+    try {
+      const savedInvoice = await updateInvoice(
+        updatedInvoice,
+      );
+
+      setInvoices((currentInvoices) =>
+        currentInvoices.map((invoice) =>
+          invoice.id === savedInvoice.id
+            ? savedInvoice
+            : invoice,
+        ),
+      );
+
+      setSelectedInvoice(null);
+    } catch (error) {
+      console.error("Unable to update invoice:", error);
+      setDataError(
+        "The invoice changes could not be saved.",
+      );
+    }
   }
 
   return (
@@ -192,6 +196,18 @@ function AdminInvoicesPage() {
           Create Invoice
         </button>
       </header>
+
+      {dataError && (
+        <p className="admin-login-error" role="alert">
+          {dataError}
+        </p>
+      )}
+
+      {isLoading && (
+        <p className="admin-loading-message">
+          Loading invoices…
+        </p>
+      )}
 
       <section className="admin-metrics admin-estimate-metrics">
         <article className="admin-metric-card">

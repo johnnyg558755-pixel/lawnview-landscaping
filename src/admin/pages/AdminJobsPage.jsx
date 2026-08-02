@@ -2,53 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import CreateJobModal from "../components/CreateJobModal";
 import JobDetailsModal from "../components/JobDetailsModal";
+import {
+  createJob,
+  fetchCustomers,
+  fetchEstimates,
+  fetchJobs,
+  updateJob,
+} from "../services/adminData";
 
-const sampleJobs = [
-  {
-    id: "JOB-1003",
-    customer: "Maria Hernandez",
-    service: "Weekly Lawn Mowing",
-    date: "Jul 28, 2026",
-    time: "10:00 AM",
-    address: "Mesquite, TX",
-    amount: 55,
-    status: "Scheduled",
-  },
-  {
-    id: "JOB-1002",
-    customer: "David Thompson",
-    service: "Property Cleanup",
-    date: "Jul 27, 2026",
-    time: "1:30 PM",
-    address: "Mesquite, TX",
-    amount: 175,
-    status: "In Progress",
-  },
-  {
-    id: "JOB-1001",
-    customer: "Angela Williams",
-    service: "Mulch Installation",
-    date: "Jul 25, 2026",
-    time: "9:00 AM",
-    address: "Mesquite, TX",
-    amount: 285,
-    status: "Completed",
-  },
-];
 
-const JOBS_STORAGE_KEY = "lawnview-admin-jobs";
-const ESTIMATES_STORAGE_KEY = "lawnview-admin-estimates";
-const CUSTOMERS_STORAGE_KEY = "lawnview-admin-customers";
-
-function loadStorage(key, fallback = []) {
-  try {
-    const savedData = localStorage.getItem(key);
-
-    return savedData ? JSON.parse(savedData) : fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-US", {
@@ -58,42 +20,98 @@ function formatCurrency(amount) {
 }
 
 function AdminJobsPage() {
-  const [jobs, setJobs] = useState(() =>
-    loadStorage(JOBS_STORAGE_KEY, sampleJobs),
-  );
+  const [jobs, setJobs] = useState([]);
+  const [approvedEstimates, setApprovedEstimates] =
+    useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
 
-  const [approvedEstimates] = useState(() =>
-    loadStorage(ESTIMATES_STORAGE_KEY).filter(
-      (estimate) => estimate.status === "Approved",
-    ),
-  );
+  useEffect(() => {
+    let isActive = true;
 
-  const [customers] = useState(() =>
-    loadStorage(CUSTOMERS_STORAGE_KEY),
-  );
+    async function loadJobData() {
+      try {
+        const [cloudJobs, cloudEstimates, cloudCustomers] =
+          await Promise.all([
+            fetchJobs(),
+            fetchEstimates(),
+            fetchCustomers(),
+          ]);
+
+        if (isActive) {
+          setJobs(cloudJobs);
+          setApprovedEstimates(
+            cloudEstimates.filter(
+              (estimate) => estimate.status === "Approved",
+            ),
+          );
+          setCustomers(cloudCustomers);
+        }
+      } catch (error) {
+        console.error("Unable to load jobs:", error);
+
+        if (isActive) {
+          setDataError(
+            "Unable to load jobs. Check your connection and try again.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadJobData();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-useEffect(() => {
-  localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
-}, [jobs]);
 
-function handleCreateJob(job) {
-  setJobs((currentJobs) => [job, ...currentJobs]);
-  setIsCreateModalOpen(false);
+async function handleCreateJob(job) {
+  setDataError("");
+
+  try {
+    const savedJob = await createJob(job);
+
+    setJobs((currentJobs) => [
+      savedJob,
+      ...currentJobs,
+    ]);
+    setIsCreateModalOpen(false);
+  } catch (error) {
+    console.error("Unable to create job:", error);
+    setDataError(
+      "The job could not be saved. Please try again.",
+    );
+  }
 }
 
-function handleSaveJob(updatedJob) {
-  setJobs((currentJobs) =>
-    currentJobs.map((job) =>
-      job.id === updatedJob.id ? updatedJob : job,
-    ),
-  );
+async function handleSaveJob(updatedJob) {
+  setDataError("");
 
-  setSelectedJob(null);
+  try {
+    const savedJob = await updateJob(updatedJob);
+
+    setJobs((currentJobs) =>
+      currentJobs.map((job) =>
+        job.id === savedJob.id ? savedJob : job,
+      ),
+    );
+
+    setSelectedJob(null);
+  } catch (error) {
+    console.error("Unable to update job:", error);
+    setDataError("The job changes could not be saved.");
+  }
 }
 
   const filteredJobs = useMemo(() => {
@@ -133,6 +151,18 @@ function handleSaveJob(updatedJob) {
           Create Job
         </button>
       </header>
+
+      {dataError && (
+        <p className="admin-login-error" role="alert">
+          {dataError}
+        </p>
+      )}
+
+      {isLoading && (
+        <p className="admin-loading-message">
+          Loading jobs…
+        </p>
+      )}
 
       <section className="admin-metrics admin-estimate-metrics">
         <article className="admin-metric-card">

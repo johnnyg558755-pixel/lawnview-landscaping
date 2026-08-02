@@ -22,6 +22,9 @@ import AdminEstimatesPage from "./admin/pages/AdminEstimatesPage";
 import AdminJobsPage from "./admin/pages/AdminJobsPage";
 import AdminSchedulePage from "./admin/pages/AdminSchedulePage";
 import AdminInvoicesPage from "./admin/pages/AdminInvoicesPage";
+import AdminLoginPage from "./admin/pages/AdminLoginPage";
+import { AuthProvider } from "./auth/AuthContext";
+import ProtectedRoute from "./auth/ProtectedRoute";
 
 function HomePage() {
   return (
@@ -101,28 +104,58 @@ function App() {
     return () => observer.disconnect();
   }, [location.pathname]);
 
-  return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/gallery" element={<GalleryPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/estimate" element={<EstimatePage />} />
-      <Route path="/services" element={<ServicesPage />} />
-      <Route path="/service-area" element={<ServiceAreaPage />} />
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboardPage />} />
-      </Route>
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboardPage />} />
-        <Route path="inquiries" element={<AdminInquiriesPage />} />
-        <Route path="customers" element={<AdminCustomersPage />} />
-        <Route path="estimates" element={<AdminEstimatesPage />} />
-        <Route path="jobs" element={<AdminJobsPage />} />
-        <Route path="schedule" element={<AdminSchedulePage />} />
-        <Route path="invoices" element={<AdminInvoicesPage />} />
-      </Route>
-    </Routes>
+    return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/estimate" element={<EstimatePage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route
+          path="/service-area"
+          element={<ServiceAreaPage />}
+        />
+
+        <Route
+          path="/admin/login"
+          element={<AdminLoginPage />}
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route
+            path="inquiries"
+            element={<AdminInquiriesPage />}
+          />
+          <Route
+            path="customers"
+            element={<AdminCustomersPage />}
+          />
+          <Route
+            path="estimates"
+            element={<AdminEstimatesPage />}
+          />
+          <Route path="jobs" element={<AdminJobsPage />} />
+          <Route
+            path="schedule"
+            element={<AdminSchedulePage />}
+          />
+          <Route
+            path="invoices"
+            element={<AdminInvoicesPage />}
+          />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
 

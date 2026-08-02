@@ -2,54 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import CreateEstimateModal from "../components/CreateEstimateModal";
 import EstimateDetailsModal from "../components/EstimateDetailsModal";
-
-const sampleEstimates = [
-  {
-    id: "EST-1003",
-    customer: "Angela Williams",
-    service: "Mulch Installation",
-    amount: 285,
-    created: "Jul 26, 2026",
-    status: "Sent",
-  },
-  {
-    id: "EST-1002",
-    customer: "David Thompson",
-    service: "Property Cleanup",
-    amount: 175,
-    created: "Jul 25, 2026",
-    status: "Draft",
-  },
-  {
-    id: "EST-1001",
-    customer: "Maria Hernandez",
-    service: "Weekly Lawn Mowing",
-    amount: 55,
-    created: "Jul 24, 2026",
-    status: "Approved",
-  },
-];
-
-const ESTIMATES_STORAGE_KEY = "lawnview-admin-estimates";
-const CUSTOMERS_STORAGE_KEY = "lawnview-admin-customers";
-
-function loadSavedEstimates() {
-  try {
-    const savedEstimates = localStorage.getItem(ESTIMATES_STORAGE_KEY);
-
-    return savedEstimates ? JSON.parse(savedEstimates) : sampleEstimates;
-  } catch {
-    return sampleEstimates;
-  }
-}
-
-function loadSavedCustomers() {
-  try {
-    return JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
+import {
+  createEstimate,
+  fetchCustomers,
+  fetchEstimates,
+  updateEstimate,
+} from "../services/adminData";
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-US", {
@@ -59,31 +17,95 @@ function formatCurrency(amount) {
 }
 
 function AdminEstimatesPage() {
-  const [estimates, setEstimates] = useState(loadSavedEstimates);
-  const [customers] = useState(loadSavedCustomers);
+  const [estimates, setEstimates] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
-  localStorage.setItem(ESTIMATES_STORAGE_KEY, JSON.stringify(estimates));
-  }, [estimates]);
+    let isActive = true;
 
-function handleCreateEstimate(estimate) {
-  setEstimates((currentEstimates) => [estimate, ...currentEstimates]);
-  setIsCreateModalOpen(false);
-}
+    async function loadEstimateData() {
+      try {
+        const [cloudEstimates, cloudCustomers] =
+          await Promise.all([
+            fetchEstimates(),
+            fetchCustomers(),
+          ]);
 
-function handleSaveEstimate(updatedEstimate) {
-  setEstimates((currentEstimates) =>
-    currentEstimates.map((estimate) =>
-      estimate.id === updatedEstimate.id ? updatedEstimate : estimate,
-    ),
-  );
+        if (isActive) {
+          setEstimates(cloudEstimates);
+          setCustomers(cloudCustomers);
+        }
+      } catch (error) {
+        console.error("Unable to load estimates:", error);
 
-  setSelectedEstimate(null);
-}
+        if (isActive) {
+          setDataError(
+            "Unable to load estimates. Check your connection and try again.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadEstimateData();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  async function handleCreateEstimate(estimate) {
+    setDataError("");
+
+    try {
+      const savedEstimate = await createEstimate(estimate);
+
+      setEstimates((currentEstimates) => [
+        savedEstimate,
+        ...currentEstimates,
+      ]);
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error("Unable to create estimate:", error);
+      setDataError(
+        "The estimate could not be saved. Please try again.",
+      );
+    }
+  }
+
+  async function handleSaveEstimate(updatedEstimate) {
+    setDataError("");
+
+    try {
+      const savedEstimate = await updateEstimate(
+        updatedEstimate,
+      );
+
+      setEstimates((currentEstimates) =>
+        currentEstimates.map((estimate) =>
+          estimate.id === savedEstimate.id
+            ? savedEstimate
+            : estimate,
+        ),
+      );
+
+      setSelectedEstimate(null);
+    } catch (error) {
+      console.error("Unable to update estimate:", error);
+      setDataError(
+        "The estimate changes could not be saved.",
+      );
+    }
+  }
 
   const filteredEstimates = useMemo(() => {
     const search = searchTerm.toLowerCase();
@@ -147,6 +169,17 @@ function handleSaveEstimate(updatedEstimate) {
           </strong>
           <span>Ready to schedule</span>
         </article>
+      {dataError && (
+        <p className="admin-login-error" role="alert">
+          {dataError}
+        </p>
+      )}
+
+      {isLoading && (
+        <p className="admin-loading-message">
+          Loading estimates…
+        </p>
+      )}
       </section>
 
       <section className="admin-panel admin-inquiries-panel">
@@ -247,6 +280,7 @@ function handleSaveEstimate(updatedEstimate) {
       {selectedEstimate && (
         <EstimateDetailsModal
           estimate={selectedEstimate}
+          customers={customers}
           onClose={() => setSelectedEstimate(null)}
           onSave={handleSaveEstimate}
         />

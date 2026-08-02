@@ -1,15 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { fetchJobs } from "../services/adminData";
 
-const JOBS_STORAGE_KEY = "lawnview-admin-jobs";
-
-function loadJobs() {
-  try {
-    return JSON.parse(localStorage.getItem(JOBS_STORAGE_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
 
 function getDateValue(job) {
   if (job.dateValue) return job.dateValue;
@@ -55,8 +47,42 @@ function formatHeading(dateValue) {
 }
 
 function AdminSchedulePage() {
-  const [jobs] = useState(loadJobs);
+  const [jobs, setJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
   const [statusFilter, setStatusFilter] = useState("Active");
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadSchedule() {
+      try {
+        const cloudJobs = await fetchJobs();
+
+        if (isActive) {
+          setJobs(cloudJobs);
+        }
+      } catch (error) {
+        console.error("Unable to load schedule:", error);
+
+        if (isActive) {
+          setDataError(
+            "Unable to load the schedule. Check your connection and try again.",
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadSchedule();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const todayValue = useMemo(() => {
     const today = new Date();
@@ -150,6 +176,18 @@ function AdminSchedulePage() {
           </select>
         </label>
       </header>
+
+      {dataError && (
+        <p className="admin-login-error" role="alert">
+          {dataError}
+        </p>
+      )}
+
+      {isLoading && (
+        <p className="admin-loading-message">
+          Loading schedule…
+        </p>
+      )}
 
       <section className="admin-metrics admin-schedule-metrics">
         <article className="admin-metric-card">
