@@ -7,14 +7,16 @@ import "../AdminLoginPage.css";
 function AdminLoginPage() {
   const { session, loading } = useAuth();
   const location = useLocation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const destination = location.state?.from?.pathname || "/admin";
+  const destination =
+    location.state?.from?.pathname || "/admin";
 
-  if (!loading && session) {
+  if (!loading && session && !submitting) {
     return <Navigate to={destination} replace />;
   }
 
@@ -23,15 +25,34 @@ function AdminLoginPage() {
     setErrorMessage("");
     setSubmitting(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
     if (error) {
-      setErrorMessage("The email or password is incorrect.");
+      setErrorMessage(
+        "The email or password is incorrect.",
+      );
       setSubmitting(false);
+      return;
     }
+
+    const { error: refreshError } =
+      await supabase.auth.refreshSession();
+
+    if (refreshError) {
+      await supabase.auth.signOut();
+
+      setErrorMessage(
+        "Your session could not be started. Please try again.",
+      );
+      setSubmitting(false);
+      return;
+    }
+
+    setSubmitting(false);
   }
 
   return (
@@ -53,39 +74,63 @@ function AdminLoginPage() {
           estimates, and invoices.
         </p>
 
-        <form className="admin-login-form" onSubmit={handleSubmit}>
-          <label htmlFor="admin-email">Email address</label>
+        <form
+          className="admin-login-form"
+          onSubmit={handleSubmit}
+        >
+          <label htmlFor="admin-email">
+            Email address
+          </label>
+
           <input
             id="admin-email"
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) =>
+              setEmail(event.target.value)
+            }
             required
           />
 
-          <label htmlFor="admin-password">Password</label>
+          <label htmlFor="admin-password">
+            Password
+          </label>
+
           <input
             id="admin-password"
             type="password"
             autoComplete="current-password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) =>
+              setPassword(event.target.value)
+            }
             required
           />
 
           {errorMessage && (
-            <p className="admin-login-error" role="alert">
+            <p
+              className="admin-login-error"
+              role="alert"
+            >
               {errorMessage}
             </p>
           )}
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Signing in…" : "Sign in"}
+          <button
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting
+              ? "Signing in…"
+              : "Sign in"}
           </button>
         </form>
 
-        <a className="admin-login-home" href="/">
+        <a
+          className="admin-login-home"
+          href="/"
+        >
           Return to Lawnview website
         </a>
       </section>
