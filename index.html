@@ -34,9 +34,26 @@
       name="twitter:image"
       content="https://johnnyg558755-pixel.github.io/lawnview-landscaping/lawnview-preview.jpg"
     />
-    <script type="module" crossorigin src="/lawnview-landscaping/assets/index-CskxVxfL.js"></script>
-    <link rel="stylesheet" crossorigin href="/lawnview-landscaping/assets/index-BSAGnbGE.css">
-  </head>
+    <script>
+      (function restoreGitHubPagesRoute(locationData) {
+        if (locationData.search.startsWith("?/")) {
+          const restoredRoute = locationData.search
+            .slice(2)
+            .split("&")
+            .map((part) => part.replace(/~and~/g, "&"))
+            .join("?");
+
+          window.history.replaceState(
+            null,
+            "",
+            locationData.pathname + restoredRoute + locationData.hash,
+          );
+        }
+      })(window.location);
+    </script>
+      <script type="module" crossorigin src="/lawnview-landscaping/assets/index-CskxVxfL.js"></script>
+      <link rel="stylesheet" crossorigin href="/lawnview-landscaping/assets/index-BSAGnbGE.css">
+    </head>
   <body>
     <div id="root"></div>
   </body>
