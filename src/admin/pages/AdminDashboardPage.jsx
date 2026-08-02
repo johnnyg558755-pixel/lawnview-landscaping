@@ -1,20 +1,13 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  fetchEstimates,
+  fetchInquiries,
+  fetchInvoices,
+  fetchJobs,
+} from "../services/adminData";
 
-const INQUIRIES_STORAGE_KEY = "lawnview-admin-inquiries";
-const ESTIMATES_STORAGE_KEY = "lawnview-admin-estimates";
-const JOBS_STORAGE_KEY = "lawnview-admin-jobs";
-const INVOICES_STORAGE_KEY = "lawnview-admin-invoices";
-
-function readStorage(key) {
-  try {
-    const storedData = localStorage.getItem(key);
-    return storedData ? JSON.parse(storedData) : [];
-  } catch {
-    return [];
-  }
-}
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-US", {
@@ -89,10 +82,57 @@ function getInvoiceStatus(invoice) {
 function AdminDashboardPage() {
   const navigate = useNavigate();
 
-  const inquiries = readStorage(INQUIRIES_STORAGE_KEY);
-  const estimates = readStorage(ESTIMATES_STORAGE_KEY);
-  const jobs = readStorage(JOBS_STORAGE_KEY);
-  const invoices = readStorage(INVOICES_STORAGE_KEY);
+    const [inquiries, setInquiries] = useState([]);
+    const [estimates, setEstimates] = useState([]);
+    const [jobs, setJobs] = useState([]);
+    const [invoices, setInvoices] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [dataError, setDataError] = useState("");
+
+    useEffect(() => {
+      let isActive = true;
+
+      async function loadDashboard() {
+        try {
+          const [
+            cloudInquiries,
+            cloudEstimates,
+            cloudJobs,
+            cloudInvoices,
+          ] = await Promise.all([
+            fetchInquiries(),
+            fetchEstimates(),
+            fetchJobs(),
+            fetchInvoices(),
+          ]);
+
+          if (isActive) {
+            setInquiries(cloudInquiries);
+            setEstimates(cloudEstimates);
+            setJobs(cloudJobs);
+            setInvoices(cloudInvoices);
+          }
+        } catch (error) {
+          console.error("Unable to load dashboard:", error);
+
+          if (isActive) {
+            setDataError(
+              "Unable to load dashboard data. Check your connection and try again.",
+            );
+          }
+        } finally {
+          if (isActive) {
+            setIsLoading(false);
+          }
+        }
+      }
+
+      loadDashboard();
+
+      return () => {
+        isActive = false;
+      };
+    }, []);
 
   const newInquiries = inquiries.filter(
     (inquiry) => inquiry.status === "New",
@@ -148,6 +188,18 @@ function AdminDashboardPage() {
           Add Inquiry
         </button>
       </header>
+
+      {dataError && (
+        <p className="admin-login-error" role="alert">
+          {dataError}
+        </p>
+      )}
+
+      {isLoading && (
+        <p className="admin-loading-message">
+          Loading dashboard…
+        </p>
+      )}
 
       <section className="admin-metrics" aria-label="Business overview">
         <article className="admin-metric-card">
