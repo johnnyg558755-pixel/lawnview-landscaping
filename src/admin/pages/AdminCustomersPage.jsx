@@ -70,14 +70,29 @@ function AdminCustomersPage() {
     }
   }
 
-  function handleSaveCustomer(updatedCustomer) {
-    setCustomers((currentCustomers) =>
-      currentCustomers.map((customer) =>
-        customer.id === updatedCustomer.id ? updatedCustomer : customer,
-      ),
-    );
+  async function handleSaveCustomer(updatedCustomer) {
+    setDataError("");
 
-    setSelectedCustomer(null);
+    try {
+      const savedCustomer = await updateCustomer(
+        updatedCustomer,
+      );
+
+      setCustomers((currentCustomers) =>
+        currentCustomers.map((customer) =>
+          customer.id === savedCustomer.id
+            ? savedCustomer
+            : customer,
+        ),
+      );
+
+      setSelectedCustomer(null);
+    } catch (error) {
+      console.error("Unable to update customer:", error);
+      setDataError(
+        "The customer changes could not be saved.",
+      );
+    }
   }
 
   const filteredCustomers = useMemo(() => {

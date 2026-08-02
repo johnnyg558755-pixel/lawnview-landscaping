@@ -12,6 +12,14 @@ function EstimateDetailsModal({
   onSave,
 }) {
 
+  const [formData, setFormData] = useState({
+    ...estimate,
+    labor: estimate.labor ?? estimate.amount,
+    materials: estimate.materials ?? 0,
+    additional: estimate.additional ?? 0,
+    notes: estimate.notes ?? "",
+  });
+
   const total = useMemo(() => {
     return (
       Number(formData.labor || 0) +

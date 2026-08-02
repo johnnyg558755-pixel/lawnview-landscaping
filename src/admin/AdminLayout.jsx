@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   NavLink,
   Outlet,
-  useLocation,
   useNavigate,
 } from "react-router-dom";
 import "./AdminLayout.css";
@@ -19,15 +18,12 @@ const adminLinks = [
 ];
 
 function AdminLayout() {
-  const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
+
 
   useEffect(() => {
     function handleKeyDown(event) {
